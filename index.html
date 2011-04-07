@@ -1,9 +1,28 @@
 <html>
     <head>
         <title>Workshop</title>
-        <script src="tetris.js"></script>
+        <script type="text/javascript" src="tetris.js"></script>
+        <script type="text/javascript">
+            function init() {
+              console.log('init');
+              var t = new Tetris('tetris', 25, function(score, lines, level) {
+                document.getElementById('score').innerHTML = score;
+                document.getElementById('lines').innerHTML = lines;
+                document.getElementById('level').innerHTML = level;
+              });
+            }
+        </script>
     </head>
-    <body>
-        <div id='workshop'></div>
+    <body onload="init()">
+        <canvas id='tetris' width="350" height="500"></canvas>
+        <div>
+            <label>Score:</label><span id='score'></span>
+        </div>
+        <div>
+            <label>Lines:</label><span id='lines'></span>
+        </div>
+        <div>
+            <label>Level:</label><span id='level'></span>
+        </div>
     </body>
 </html>
