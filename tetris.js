@@ -279,7 +279,6 @@ function Tetris(canvas_id, block_size, score_callback) {
   }
 
   function handleKeys(e) {
-    console.log('handleKey');
     var k;
     var evt = (e) ? e : window.event;
 
@@ -302,7 +301,7 @@ function Tetris(canvas_id, block_size, score_callback) {
     context = canvas.getContext('2d');
 
     // create handlers
-    document.onkeyup = function(e) { return handleKeys(e); };
+    document.onkeypress = function(e) { return handleKeys(e); };
 
     reset();
     draw_game_board();
