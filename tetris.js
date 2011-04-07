@@ -1,89 +1,93 @@
 function Tetris(canvas_id, block_size, score_callback) {
   var width = 14,
-  height = 20,
-  canvas_id = canvas_id,
-    block_size = block_size ? block_size : 20,
-  calculated_width = width * block_size,
-  calculated_height = height * block_size,
-  board,
-  pending_shape,
-  active_shape,
-  context,
-    level,
-  score,
-    lines;
+      height = 20,
+      canvas_id = canvas_id,
+      block_size = block_size ? block_size : 20,
+      calculated_width = width * block_size,
+      calculated_height = height * block_size,
+      board,
+      pending_shape,
+      active_shape,
+      context,
+      level,
+      score,
+      lines,
+      t;
 
   var BLOCK_EMPTY = 0,
-    BLOCK_FULL = 1,
-  BLOCK_ACTIVE = 2;
+      BLOCK_FULL = 1,
+      BLOCK_ACTIVE = 2;
 
   // keys
-    var UP = 38, DOWN = 40, LEFT = 37, RIGHT = 39;
+  var UP = 38, DOWN = 40, LEFT = 37, RIGHT = 39;
 
-    function Shape() {
-      var self = this;
+  function Shape() {
+    var self = this;
 
-      var shapes = [
-        [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]],
-          [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
-        [[0, 0, 0, 0], [0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0]],
-        [[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 1, 1, 0]],
-        [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0]],
-        [[0, 0, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0]]
-      ];
+    var shapes = [
+      [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]],
+      [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]],
+      [[0, 0, 0, 0], [0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0]],
+      [[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 1, 1, 0]],
+      [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 1, 0], [0, 1, 0, 0]],
+      [[0, 0, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0]]
+    ];
 
-      this.rotate = function() {
-        var new_shape = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+    this.rotate = function() {
+      var new_shape = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
 
-        for (var j = 0; j < 4; j++)
-          for (var i = 0; i < 4; i++) {
-            new_shape[i][j] = self.shape[4 - j - 1][i];
-          }
+      for (var j = 0; j < 4; j++)
+        for (var i = 0; i < 4; i++) {
+          new_shape[i][j] = self.shape[4 - j - 1][i];
+        }
 
-        self.shape = new_shape;
-      }
+      self.shape = new_shape;
+    };
 
-      this.left_edge = function() {
+    this.left_edge = function() {
+      for (var x = 0; x < 4; x++)
+        for (var y = 0; y < 4; y++)
+          if (self.shape[y][x] == BLOCK_FULL)
+            return x;
+      return null;
+    };
+
+    this.right_edge = function() {
+      for (var x = 3; x >= 0; x--)
+        for (var y = 0; y < 4; y++)
+          if (self.shape[y][x] == BLOCK_FULL)
+            return x;
+      return null;
+    };
+
+    this.bottom_edge = function() {
+      for (var y = 3; y >= 0; y--)
         for (var x = 0; x < 4; x++)
-          for (var y = 0; y < 4; y++)
-            if (self.shape[y][x] == BLOCK_FULL)
-              return x;
-      }
+          if (self.shape[y][x] == BLOCK_FULL)
+            return y;
+      return null;
+    };
 
-      this.right_edge = function() {
-        for (var x = 3; x >= 0; x--)
-          for (var y = 0; y < 4; y++)
-            if (self.shape[y][x] == BLOCK_FULL)
-              return x;
-      }
+    this.initialize = function() {
+      var rotations = parseInt(Math.random() * 4),
+      shape_idx = parseInt(Math.random() * shapes.length);
 
-      this.bottom_edge = function() {
-        for (var y = 3; y >= 0; y--)
-          for (var x = 0; x < 4; x++)
-            if (self.shape[y][x] == BLOCK_FULL)
-              return y;
-      }
+      // grab a random shape
+      self.shape = shapes[shape_idx];
 
-      this.initialize = function() {
-        var rotations = parseInt(Math.random() * 4),
-        shape_idx = parseInt(Math.random() * shapes.length);
+      // rotate it a couple times
+      for (var i = 0; i < rotations; i++)
+        self.rotate();
+    };
 
-        // grab a random shape
-        self.shape = shapes[shape_idx];
-
-        // rotate it a couple times
-        for (var i = 0; i < rotations; i++)
-          self.rotate();
-      }
-
-      this.clone = function() {
-        s = new Shape();
-        s.x = self.x;
-        s.y = self.y;
-        s.shape = self.shape;
-        return s;
-      }
-    }
+    this.clone = function() {
+      var s = new Shape();
+      s.x = self.x;
+      s.y = self.y;
+      s.shape = self.shape;
+      return s;
+    };
+  }
 
   function reset() {
     board = [];
@@ -96,7 +100,7 @@ function Tetris(canvas_id, block_size, score_callback) {
 
     score = 0;
     lines = 0;
-    level = 1;
+      level = 1;
     if (score_callback)
       score_callback(score, lines, level);
 
@@ -119,7 +123,7 @@ function Tetris(canvas_id, block_size, score_callback) {
   }
 
   function rotate_shape() {
-    rotated_shape = active_shape.clone();
+    var rotated_shape = active_shape.clone();
     rotated_shape.rotate();
 
     if (rotated_shape.left_edge() + rotated_shape.x < 0)
@@ -132,6 +136,8 @@ function Tetris(canvas_id, block_size, score_callback) {
 
     if (!is_collision(rotated_shape))
       active_shape = rotated_shape;
+
+    return null;
   }
 
   function move_left() {
@@ -293,10 +299,10 @@ function Tetris(canvas_id, block_size, score_callback) {
 
   function initialize() {
     var canvas = document.getElementById(canvas_id);
-      context = canvas.getContext('2d');
+    context = canvas.getContext('2d');
 
     // create handlers
-    document.onkeypress = function(e) { return handleKeys(e) };
+    document.onkeyup = function(e) { return handleKeys(e); };
 
     reset();
     draw_game_board();
